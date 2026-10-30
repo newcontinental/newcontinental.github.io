@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>신대륙 그룹웨어</title>
+<meta name="theme-color" content="#1f5e2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="신대륙 그룹웨어">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; }
+  body { font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; }
+  #gw { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; padding-top: env(safe-area-inset-top); box-sizing: border-box; background: #fff; }
+  #splash { position: fixed; inset: 0; background: #1f5e2a; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 5; transition: opacity .35s; }
+  #splash img { width: 104px; height: 104px; }
+  #splash b { font-size: 20px; letter-spacing: -.3px; }
+  #splash span { font-size: 13px; opacity: .8; }
+  #splash.hide { opacity: 0; pointer-events: none; }
+  #splash .bar { width: 120px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.25); overflow: hidden; }
+  #splash .bar i { display: block; width: 40%; height: 100%; background: #fff; animation: run 1.1s infinite ease-in-out; }
+  @keyframes run { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+  #off { display: none; margin-top: 8px; background: rgba(255,255,255,.15); padding: 10px 14px; border-radius: 10px; font-size: 14px; text-align: center; line-height: 1.5; }
+  #off button { margin-top: 8px; background: #fff; color: #1f5e2a; border: 0; border-radius: 8px; padding: 8px 16px; font-weight: 700; font-size: 14px; }
+  #inst { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.25); padding: 12px 14px; display: none; align-items: center; gap: 12px; z-index: 6; font-size: 14px; }
+  #inst img { width: 40px; height: 40px; }
+  #inst div { flex: 1; line-height: 1.4; }
+  #inst small { color: #666; }
+  #inst button { border: 0; border-radius: 10px; padding: 9px 14px; font-weight: 700; font-size: 14px; }
+  #inst .go { background: #1f5e2a; color: #fff; }
+  #inst .no { background: none; color: #888; padding: 9px 6px; }
+</style>
+</head>
+<body>
+<div id="splash"><img src="icon-512.png" alt=""><b>신대륙물류(주) 그룹웨어</b><span id="msg">불러오는 중…</span><div class="bar"><i></i></div>
+  <div id="off">인터넷 연결이 없습니다.<br>연결되면 다시 눌러 주세요.<br><button onclick="location.reload()">다시 시도</button></div></div>
+<iframe id="gw" title="신대륙물류 그룹웨어" allow="camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen"></iframe>
+<div id="inst"><img src="icon-192.png" alt=""><div><b>앱으로 설치</b><br><small id="instTxt">홈 화면에 아이콘이 생기고 전체 화면으로 열립니다</small></div><button class="no" id="instNo">닫기</button><button class="go" id="instGo">설치</button></div>
+<script>
+// 그룹웨어 주소 (Apps Script 웹 앱). 배포를 새로 만들면(새 버전이 아니라 "새 배포") 이 주소만 바꾸면 된다.
+var GW = 'https://script.google.com/macros/s/AKfycbylymU3YkmjSNC2EFmVckdT0D9nA3D9qH-0iy9PqVgrXzt7lT38NkfcGC-4PxlsowVpwA/exec';
+var TK = 'sdr_shell_tk';
+var fr = document.getElementById('gw'), sp = document.getElementById('splash');
+function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { return null; } }
+function hideSplash() { sp.classList.add('hide'); setTimeout(function () { sp.style.display = 'none'; }, 400); }
+
+// 그룹웨어 화면(구글 쪽)과 로그인 정보를 주고받는다. 아이폰에서 로그인이 풀리지 않게 껍데기 쪽에도 보관.
+window.addEventListener('message', function (e) {
+  if (!/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(e.origin)) return;
+  var d = e.data; if (!d || d.sdr !== 1) return;
+  if (d.k === 'need') e.source.postMessage({ sdr: 1, k: 'tok', t: ls(TK) || '' }, e.origin);
+  else if (d.k === 'set') ls(TK, typeof d.t === 'string' ? d.t : '');
+  else if (d.k === 'ready') hideSplash();
+});
+fr.addEventListener('load', function () { setTimeout(hideSplash, 600); });
+setTimeout(hideSplash, 15000);
+
+function go() {
+  if (!navigator.onLine) { document.getElementById('msg').style.display = 'none'; document.getElementById('off').style.display = 'block'; return; }
+  fr.src = GW;
+}
+window.addEventListener('online', function () { if (!fr.src) location.reload(); });
+go();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+
+// 설치 안내 (브라우저로 열었을 때만)
+var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+var inst = document.getElementById('inst'), deferred = null;
+function showInst(txt, btn) { if (standalone || ls('sdr_inst_no')) return; if (txt) document.getElementById('instTxt').textContent = txt; document.getElementById('instGo').style.display = btn ? '' : 'none'; inst.style.display = 'flex'; }
+document.getElementById('instNo').onclick = function () { inst.style.display = 'none'; ls('sdr_inst_no', String(Date.now())); };
+window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; setTimeout(function () { showInst('', true); }, 2500); });
+document.getElementById('instGo').onclick = function () { if (!deferred) return; deferred.prompt(); deferred.userChoice.then(function () { deferred = null; inst.style.display = 'none'; }); };
+var ua = navigator.userAgent, isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+if (isIOS && !standalone) setTimeout(function () { showInst('사파리 아래쪽 공유 단추(□↑) → 「홈 화면에 추가」를 눌러 주세요', false); }, 2500);
+</script>
+</body>
+</html>
