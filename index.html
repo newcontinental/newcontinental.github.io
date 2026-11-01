@@ -49,8 +49,11 @@ function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); i
 function hideSplash() { sp.classList.add('hide'); setTimeout(function () { sp.style.display = 'none'; }, 400); }
 
 // 그룹웨어 화면(구글 쪽)과 로그인 정보를 주고받는다. 아이폰에서 로그인이 풀리지 않게 껍데기 쪽에도 보관.
+// 메시지를 보낸 창이 정말 이 앱 안에 띄운 그룹웨어 화면인지 확인한다 (다른 사이트가 이 앱을 열어 로그인 정보를 달라고 하는 것을 막음)
+function fromGw(w) { try { for (var i = 0; i < 6 && w; i++) { if (w === fr.contentWindow) return true; if (w === w.parent) return false; w = w.parent; } } catch (x) {} return false; }
 window.addEventListener('message', function (e) {
   if (!/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(e.origin)) return;
+  if (!fromGw(e.source)) return;
   var d = e.data; if (!d || d.sdr !== 1) return;
   if (d.k === 'need') e.source.postMessage({ sdr: 1, k: 'tok', t: ls(TK) || '' }, e.origin);
   else if (d.k === 'set') ls(TK, typeof d.t === 'string' ? d.t : '');
