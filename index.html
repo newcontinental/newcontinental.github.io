@@ -17,7 +17,7 @@
   body { font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; }
   #gw { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; padding-top: env(safe-area-inset-top); box-sizing: border-box; background: #fff; }
   #splash { position: fixed; inset: 0; background: #1f5e2a; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 5; transition: opacity .35s; }
-  #splash img { width: 104px; height: 104px; border-radius: 24px; }
+  #splash img { width: 112px; height: 112px; }
   #splash b { font-size: 20px; letter-spacing: -.3px; }
   #splash span { font-size: 13px; opacity: .8; }
   #splash.hide { opacity: 0; pointer-events: none; }
@@ -36,7 +36,7 @@
 </style>
 </head>
 <body>
-<div id="splash"><img src="icon-512.png?v=2" alt=""><b>신대륙물류(주) 그룹웨어</b><span id="msg">불러오는 중…</span><div class="bar"><i></i></div>
+<div id="splash"><img src="splash-mark.png?v=2" alt=""><b>신대륙물류(주) 그룹웨어</b><span id="msg">불러오는 중…</span><div class="bar"><i></i></div>
   <div id="off">인터넷 연결이 없습니다.<br>연결되면 다시 눌러 주세요.<br><button onclick="location.reload()">다시 시도</button></div></div>
 <iframe id="gw" title="신대륙물류 그룹웨어" allow="camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen"></iframe>
 <div id="inst"><img src="icon-192.png?v=2" alt=""><div><b>앱으로 설치</b><br><small id="instTxt">홈 화면에 아이콘이 생기고 전체 화면으로 열립니다</small></div><button class="no" id="instNo">닫기</button><button class="go" id="instGo">설치</button></div>
