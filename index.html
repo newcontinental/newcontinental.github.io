@@ -57,7 +57,9 @@ window.addEventListener('message', function (e) {
   var d = e.data; if (!d || d.sdr !== 1) return;
   if (d.k === 'need') e.source.postMessage({ sdr: 1, k: 'tok', t: ls(TK) || '' }, e.origin);
   else if (d.k === 'set') ls(TK, typeof d.t === 'string' ? d.t : '');
-  else if (d.k === 'ready') hideSplash();
+  else if (d.k === 'ready') { gwWin = e.source; gwOrigin = e.origin; hideSplash(); sendGo(); }
+  else if (d.k === 'push?') { gwWin = e.source; gwOrigin = e.origin; pushState(false); }
+  else if (d.k === 'pushOn') { gwWin = e.source; gwOrigin = e.origin; pushState(true); }
 });
 fr.addEventListener('load', function () { setTimeout(hideSplash, 600); });
 setTimeout(hideSplash, 15000);
@@ -70,6 +72,39 @@ window.addEventListener('online', function () { if (!fr.src) location.reload(); 
 go();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+
+// ---------- 휴대폰 알림 (Firebase Cloud Messaging) ----------
+// 알림 허용·기기 등록은 이 껍데기(github.io)에서 하고, 받은 기기 번호(토큰)를 그룹웨어 화면에 넘겨 서버에 등록한다.
+var FB = { apiKey: 'AIzaSyAJV9r19_A70JNwnLnZWMhJFjVqokwaf9k', authDomain: 'sindaeryuk-gw.firebaseapp.com', projectId: 'sindaeryuk-gw', storageBucket: 'sindaeryuk-gw.firebasestorage.app', messagingSenderId: '874368933881', appId: '1:874368933881:web:60182ea5640375e21f2728' };
+var VAPID = 'BO8d2AZ2d2IQKkX5CfR0Ltwuk7EBmJlsb7f3g6LcGGhuTMs3Ot3gyD2QE7jEhd0gim1yhMdEK2lfWMmTxvzy_bc';
+var FBV = '10.14.1';
+var gwWin = null, gwOrigin = '', fbP = null;
+function toGw(m) { try { if (gwWin && gwOrigin) gwWin.postMessage(Object.assign({ sdr: 1 }, m), gwOrigin); } catch (x) {} }
+function pushSup() { return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window; }
+function loadJs(src) { return new Promise(function (ok, no) { var t = document.createElement('script'); t.src = src; t.onload = ok; t.onerror = no; document.head.appendChild(t); }); }
+function fbLoad() {
+  if (!fbP) fbP = loadJs('https://www.gstatic.com/firebasejs/' + FBV + '/firebase-app-compat.js').then(function () { return loadJs('https://www.gstatic.com/firebasejs/' + FBV + '/firebase-messaging-compat.js'); }).then(function () { if (!firebase.apps.length) firebase.initializeApp(FB); return firebase.messaging(); });
+  return fbP;
+}
+function pushToken() {
+  return Promise.all([fbLoad(), navigator.serviceWorker.ready]).then(function (a) { return a[0].getToken({ vapidKey: VAPID, serviceWorkerRegistration: a[1] }); });
+}
+// ask=true 면 허용 창을 띄운다 (그룹웨어의 「알림 받기」를 눌렀을 때)
+function pushState(ask) {
+  var st = { k: 'pushState', sup: pushSup(), perm: pushSup() ? Notification.permission : '', ios: isIOS && !standalone };
+  if (!st.sup) return toGw(st);
+  var p = ask && Notification.permission === 'default' ? Notification.requestPermission() : Promise.resolve(Notification.permission);
+  p.then(function (perm) {
+    st.perm = perm;
+    if (perm !== 'granted') return toGw(st);
+    return pushToken().then(function (t) { st.tok = t || ''; toGw(st); }, function (e) { st.err = String(e && e.message || e); toGw(st); });
+  });
+}
+// 알림을 눌러서 열렸을 때 → 그룹웨어의 그 화면으로
+var goReq = null;
+(function () { try { var q = new URLSearchParams(location.search); if (q.get('go')) { goReq = { go: q.get('go'), v: q.get('v') || '', id: q.get('id') || '' }; history.replaceState(null, '', location.pathname); } } catch (x) {} })();
+function sendGo() { if (goReq && gwWin) { toGw(Object.assign({ k: 'go' }, goReq)); goReq = null; } }
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { var d = e.data || {}; if (d.sdrGo) { goReq = d.sdrGo; if (gwWin) sendGo(); } });
 
 // 설치 안내 (브라우저로 열었을 때만)
 var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
