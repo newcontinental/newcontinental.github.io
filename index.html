@@ -21,8 +21,11 @@
   #splash b { font-size: 20px; letter-spacing: -.3px; }
   #splash span { font-size: 13px; opacity: .8; }
   #splash.hide { opacity: 0; pointer-events: none; }
-  #splash .ph { position: absolute; inset: 0; background: #1f5e2a center / cover no-repeat; opacity: 0; transition: opacity .5s; }
-  #splash .ph::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.04) 35%, rgba(8,36,18,.86) 100%); }
+  #splash .ph { position: absolute; inset: 0; background: #1f5e2a; opacity: 0; transition: opacity .5s; overflow: hidden; }
+  #splash .ph i { position: absolute; inset: 0; background: center / cover no-repeat; }
+  #splash .ph .pb { inset: -40px; filter: blur(22px) brightness(.62) saturate(1.1); }
+  @media (orientation: portrait) { #splash .ph .pf { background-size: contain; bottom: 22%; } }
+  #splash .ph::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(8,36,18,.82) 100%); }
   #splash .fg { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 16px; }
   #splash .cap { display: none; font-size: 13px; background: rgba(0,0,0,.3); padding: 3px 12px; border-radius: 99px; max-width: 80%; text-align: center; }
   #splash.photo .ph { opacity: 1; }
@@ -45,7 +48,7 @@
 </style>
 </head>
 <body>
-<div id="splash"><div class="ph" id="ph"></div><div class="fg"><img src="splash-mark.png?v=2" alt=""><b>신대륙물류(주) 그룹웨어</b><span id="msg">불러오는 중…</span><span class="cap" id="cap"></span><div class="bar"><i></i></div>
+<div id="splash"><div class="ph" id="ph"><i class="pb" id="pb"></i><i class="pf" id="pf"></i></div><div class="fg"><img src="splash-mark.png?v=2" alt=""><b>신대륙물류(주) 그룹웨어</b><span id="msg">불러오는 중…</span><span class="cap" id="cap"></span><div class="bar"><i></i></div>
   <div id="off">인터넷 연결이 없습니다.<br>연결되면 다시 눌러 주세요.<br><button onclick="location.reload()">다시 시도</button></div></div></div>
 <iframe id="gw" title="신대륙물류 그룹웨어" allow="camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen"></iframe>
 <div id="inst"><img src="icon-192.png?v=2" alt=""><div><b>앱으로 설치</b><br><small id="instTxt">홈 화면에 아이콘이 생기고 전체 화면으로 열립니다</small></div><button class="no" id="instNo">닫기</button><button class="go" id="instGo">설치</button></div>
@@ -95,7 +98,7 @@ function spStore(d) {
   var p = a[i]; if (!p || typeof p.d !== 'string' || p.d.indexOf('data:image/') !== 0) return;
   var im = new Image();
   im.onload = function () {
-    document.getElementById('ph').style.backgroundImage = 'url("' + p.d + '")';
+    document.getElementById('pb').style.backgroundImage = document.getElementById('pf').style.backgroundImage = 'url("' + p.d + '")';
     document.getElementById('cap').textContent = p.cap || '';
     setTimeout(function () { if (!sp.classList.contains('hide')) sp.classList.add('photo'); }, 700);
   };
