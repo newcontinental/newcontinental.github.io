@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>출입 현황판</title>
+<meta name="theme-color" content="#0F1726">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="출입 현황판">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="/favicon.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+<style>
+  html, body { margin: 0; height: 100%; background: #0F1726; overflow: hidden; color: #EAF0F8; font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; }
+  #bd { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #0F1726; }
+  .msg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; font-size: 20px; line-height: 1.7; color: #C9D4E5; }
+  .msg small { display: block; font-size: 15px; color: #9FB0C8; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="msg" id="msg">출입 현황판을 여는 중...</div>
+<script>
+var GW = 'https://script.google.com/macros/s/AKfycbylymU3YkmjSNC2EFmVckdT0D9nA3D9qH-0iy9PqVgrXzt7lT38NkfcGC-4PxlsowVpwA/exec';
+var KEY = 'sdr_board_k';
+function getK() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+function putK(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+var h = (location.hash || '').match(/k=([A-Za-z0-9]+)/);
+if (h) { putK(h[1]); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+var k = h ? h[1] : getK();
+var app = (window.matchMedia && (matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches)) || navigator.standalone === true;
+var msg = document.getElementById('msg');
+if (!k) {
+  msg.innerHTML = '현황판 주소가 아직 없습니다.<small>그룹웨어 → 출입 기록 → QR·설정 → 현장 현황판 → [주소 복사]로 받은 주소를<br>이 태블릿 크롬에서 한 번 열어 주세요.</small>';
+} else {
+  var f = document.createElement('iframe');
+  f.id = 'bd'; f.title = '출입 차량 현황';
+  f.setAttribute('allow', 'fullscreen; screen-wake-lock');
+  f.src = GW + '?v=board&k=' + encodeURIComponent(k) + (app ? '&app=1' : '');
+  f.onload = function () { msg.style.display = 'none'; };
+  document.body.appendChild(f);
+}
+var wl = null;
+function keepOn() {
+  try { if (navigator.wakeLock && !wl && document.visibilityState === 'visible') navigator.wakeLock.request('screen').then(function (x) { wl = x; x.addEventListener('release', function () { wl = null; }); }).catch(function () {}); } catch (e) {}
+}
+keepOn();
+document.addEventListener('visibilitychange', keepOn);
+document.addEventListener('pointerdown', keepOn);
+if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('/sw.js').catch(function () {}); } catch (e) {} }
+</script>
+</body>
+</html>
